@@ -35,6 +35,9 @@ export function getRecommendedAction(category, urgency) {
   }
 
   if (category === 'Feature Request') {
+    if (urgency === 'High' || urgency === 'Medium') {
+      return 'Log in product feedback board. Assign to sales team for direct follow-up within 24 hours — customer has indicated this is actively impacting their workflow.';
+    }
     return 'Log in product feedback board. Send acknowledgment with timeline estimate.';
   }
 
