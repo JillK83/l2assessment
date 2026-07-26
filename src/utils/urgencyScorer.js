@@ -2,40 +2,48 @@
  * Urgency Scorer - Rule-based urgency calculation
  */
 
+export const CHURN_ESCALATION_KEYWORDS = [
+  'cancel', 'canceling', 'cancelling',
+  'escalate', 'escalation', 'manager', 'supervisor',
+  'never agreed', 'was promised', 'legal', 'lawyer', 'sue',
+  'switching to',
+];
+
+const HIGH_KEYWORDS = [
+  'urgent', 'asap', 'immediately', 'right now', 'critical',
+  'down', 'outage', 'blocked', "can't work", 'production',
+];
+
+const MEDIUM_KEYWORDS = [
+  'not working', 'issue', 'problem', 'broken',
+  'incorrect charge', 'wrong plan', 'confused',
+  'upgrade', 'downgrade', 'pricing', 'plan change',
+];
+
+const NEGATIVE_CONTEXT = [
+  'cancel', 'escalate', 'manager', 'supervisor', 'never',
+  'unacceptable', 'wrong', 'sue', 'legal',
+];
+
 export function calculateUrgency(message) {
-  let urgencyScore = 50
-  
-  const exclamationCount = (message.match(/!/g) || []).length
-  urgencyScore += exclamationCount * 30
-  
-  if (message.length < 50) urgencyScore -= 40
-  if (message.length < 20) urgencyScore -= 60
-  
-  if (message === message.toUpperCase() && message.length > 10) {
-    urgencyScore -= 50
+  const lower = message.toLowerCase();
+
+  for (const keyword of CHURN_ESCALATION_KEYWORDS) {
+    if (lower.includes(keyword)) return 'High';
   }
-  
-  const politeWords = ['please', 'thank', 'thanks', 'appreciate', 'kindly']
-  politeWords.forEach(word => {
-    if (message.toLowerCase().includes(word)) urgencyScore -= 15
-  })
-  
-  if (message.includes('?')) urgencyScore -= 25
-  
-  const now = new Date()
-  if (now.getDay() === 0 || now.getDay() === 6) {
-    urgencyScore -= 20
+
+  // "immediately" in a negative context also triggers High
+  if (lower.includes('immediately') && NEGATIVE_CONTEXT.some(k => lower.includes(k))) {
+    return 'High';
   }
-  if (now.getHours() < 9 || now.getHours() > 17) {
-    urgencyScore -= 15
+
+  for (const keyword of HIGH_KEYWORDS) {
+    if (lower.includes(keyword)) return 'High';
   }
-  
-  const positiveWords = ['happy', 'love', 'great', 'excellent', 'wonderful']
-  positiveWords.forEach(word => {
-    if (message.toLowerCase().includes(word)) urgencyScore -= 20
-  })
-  
-  if (urgencyScore > 80) return "High"
-  if (urgencyScore < 30) return "Low"
-  return "Medium"
+
+  for (const keyword of MEDIUM_KEYWORDS) {
+    if (lower.includes(keyword)) return 'Medium';
+  }
+
+  return 'Low';
 }
