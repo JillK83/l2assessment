@@ -9,6 +9,13 @@ export const CHURN_ESCALATION_KEYWORDS = [
   'switching to',
 ];
 
+const FRUSTRATION_KEYWORDS = [
+  'unacceptable', 'completely unacceptable',
+  'extremely frustrated', 'very frustrated',
+  'days with no response', 'no one has responded', 'been waiting',
+  'ignored', 'nobody helped',
+];
+
 const HIGH_KEYWORDS = [
   'urgent', 'asap', 'immediately', 'right now', 'critical',
   'down', 'outage', 'blocked', "can't work", 'production',
@@ -32,6 +39,10 @@ export function calculateUrgency(message) {
     if (lower.includes(keyword)) return 'High';
   }
 
+  for (const keyword of FRUSTRATION_KEYWORDS) {
+    if (lower.includes(keyword)) return 'High';
+  }
+
   // "immediately" in a negative context also triggers High
   if (lower.includes('immediately') && NEGATIVE_CONTEXT.some(k => lower.includes(k))) {
     return 'High';
@@ -46,4 +57,19 @@ export function calculateUrgency(message) {
   }
 
   return 'Low';
+}
+
+/**
+ * Applies category-based urgency floors.
+ * Escalation/Complaint is always at least Medium — Low is never appropriate
+ * when a customer has signaled displeasure or churn intent.
+ *
+ * @param {string} category
+ * @param {string} urgency - Raw urgency from calculateUrgency
+ * @returns {string}
+ */
+export function resolveUrgency(category, urgency) {
+  if (category === 'Escalation/Complaint' && urgency === 'Low') return 'Medium';
+  if (category === 'Feature Request' && urgency === 'High') return 'Medium';
+  return urgency;
 }
