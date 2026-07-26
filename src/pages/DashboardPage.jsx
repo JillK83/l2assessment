@@ -10,42 +10,43 @@ function DashboardPage() {
   const [categoryData, setCategoryData] = useState([])
   const [urgencyData, setUrgencyData] = useState({ High: 0, Medium: 0, Low: 0 })
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
-
   const loadDashboardData = () => {
     const history = JSON.parse(localStorage.getItem('triageHistory') || '[]')
-    const today = new Date().toDateString()
-    const todayMessages = history.filter(item => 
-      new Date(item.timestamp).toDateString() === today
+    const todayString = new Date().toDateString()
+    const todayMessages = history.filter(item =>
+      new Date(item.timestamp).toDateString() === todayString
     )
 
-    // Calculate stats
     const highUrgency = history.filter(h => h.urgency === 'High').length
-    const totalDays = history.length > 0 ? 7 : 1
-    
+    const uniqueDays = new Set(
+      history.map(item => new Date(item.timestamp).toDateString())
+    ).size
+
     setStats({
       total: history.length,
       today: todayMessages.length,
       highUrgencyPercent: history.length > 0 ? Math.round((highUrgency / history.length) * 100) : 0,
-      avgPerDay: Math.round(history.length / totalDays)
+      avgPerDay: uniqueDays > 0 ? Math.round(history.length / uniqueDays) : 0
     })
 
-    // Category distribution
     const categories = {}
     history.forEach(item => {
       categories[item.category] = (categories[item.category] || 0) + 1
     })
     setCategoryData(Object.entries(categories).map(([name, count]) => ({ name, count })))
 
-    // Urgency breakdown
     const urgency = { High: 0, Medium: 0, Low: 0 }
     history.forEach(item => {
       urgency[item.urgency] = (urgency[item.urgency] || 0) + 1
     })
     setUrgencyData(urgency)
   }
+
+  useEffect(() => {
+    loadDashboardData()
+    window.addEventListener('focus', loadDashboardData)
+    return () => window.removeEventListener('focus', loadDashboardData)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -92,7 +93,7 @@ function DashboardPage() {
                         <span className="text-gray-600">{cat.count} ({percentage.toFixed(0)}%)</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-blue-500 h-2 rounded-full"
                           style={{ width: `${percentage}%` }}
                         />

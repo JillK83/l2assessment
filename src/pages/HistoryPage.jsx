@@ -5,6 +5,7 @@ function HistoryPage() {
   const [history, setHistory] = useState([])
   const [filter, setFilter] = useState('all')
   const [expandedIndex, setExpandedIndex] = useState(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   useEffect(() => {
     loadHistory()
@@ -16,18 +17,17 @@ function HistoryPage() {
   }
 
   const clearHistory = () => {
-    if (window.confirm('Are you sure you want to clear all history?')) {
-      localStorage.setItem('triageHistory', '[]')
-      setHistory([])
-    }
+    localStorage.setItem('triageHistory', '[]')
+    setHistory([])
+    setShowConfirmModal(false)
   }
 
-  const sortedHistory = [...history].sort((a, b) => 
-    a.message.localeCompare(b.message)
+  const sortedHistory = [...history].sort(
+    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
   )
-  
-  const filteredHistory = filter === 'all' 
-    ? sortedHistory 
+
+  const filteredHistory = filter === 'all'
+    ? sortedHistory
     : sortedHistory.filter(item => item.category === filter)
 
   const categories = [...new Set(history.map(item => item.category))]
@@ -43,7 +43,7 @@ function HistoryPage() {
             </div>
             {history.length > 0 && (
               <button
-                onClick={clearHistory}
+                onClick={() => setShowConfirmModal(true)}
                 className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 font-semibold"
               >
                 Clear All
@@ -167,6 +167,36 @@ function HistoryPage() {
           ))}
         </div>
       </div>
+
+      {/* Clear All Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowConfirmModal(false)}
+          />
+          <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Clear all history?</h2>
+            <p className="text-gray-600 mb-6">
+              This will permanently delete all message analyses. This cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={clearHistory}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
