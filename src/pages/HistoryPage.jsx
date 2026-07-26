@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 
+const categoryColors = {
+  "Account Access": "bg-blue-100 text-blue-700",
+  "Technical Problem": "bg-orange-100 text-orange-700",
+  "Billing Issue": "bg-purple-100 text-purple-700",
+  "General Inquiry": "bg-slate-100 text-slate-600",
+  "Feature Request": "bg-teal-100 text-teal-700",
+  "Escalation/Complaint": "bg-red-100 text-red-700",
+  "Unknown": "bg-yellow-100 text-yellow-700",
+}
+
 function HistoryPage() {
   const [history, setHistory] = useState([])
   const [filter, setFilter] = useState('all')
@@ -117,7 +127,7 @@ function HistoryPage() {
                       "{item.message.substring(0, 100)}{item.message.length > 100 ? '...' : ''}"
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
+                      <span className={`text-xs px-3 py-1 rounded-full font-semibold ${categoryColors[item.category] ?? 'bg-yellow-100 text-yellow-700'}`}>
                         {item.category}
                       </span>
                       <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
